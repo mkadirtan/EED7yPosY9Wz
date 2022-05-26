@@ -46,7 +46,6 @@ export class BlogRepository {
   }
 
   async saveCache(blog: BlogModel) {
-    // There is no cache, we need to create it
     const lock = await this.redlock.acquire([blogLockKey(blog.id)], 300);
     const exists = await this.redis.exists(blogCacheKey(blog.id));
     // Some other process already created cache on a rare occasion
