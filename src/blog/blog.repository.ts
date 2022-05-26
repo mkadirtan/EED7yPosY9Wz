@@ -50,21 +50,20 @@ export class BlogRepository {
     const exists = await this.redis.exists(blogCacheKey(blog.id));
     // Some other process already created cache on a rare occasion
     if (!exists) {
-      await this.redis.hmset(blogCacheKey(blog.id), blog);
-      await this.redis.expire(blogCacheKey(blog.id), blogExpire);
+      await this.redis.setex(blogCacheKey(blog.id), JSON.stringify(blog), blogExpire);
     }
     await lock.release();
   }
 
   async getBlog(id: string) {
-    const cacheBlog = await this.redis.hgetall(blogCacheKey(id));
+    const cacheBlog = await this.redis.get(blogCacheKey(id));
 
     if (cacheBlog) {
       console.log(`[CACHE-HIT] [${id}]`);
       const viewCount = await this.incReadCount(id);
-      // @ts-ignore
-      cacheBlog.viewCount = +cacheBlog.viewCount + viewCount;
-      return cacheBlog;
+      const parsedBlog = JSON.parse(cacheBlog);
+      parsedBlog.viewCount = parsedBlog.viewCount + viewCount;
+      return parsedBlog;
     }
 
     const dbBlog = await this.blogModel.findOne({ where: { id }, plain: true, raw: true });
