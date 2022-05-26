@@ -101,7 +101,8 @@ export class BlogRepository {
     return Promise.all([
       this.blogModel.destroy({ where: { id } }),
       this.redis.del(blogCacheKey(id)),
-      this.redis.del(counterKey(id))
+      this.redis.del(counterKey(id)),
+      this.redis.srem('countedBlogs', id)
       // this.removeCounterJob(id) cannot remove, because jobId is unknown
       // However it will remove itself in a few retries
     ]);
