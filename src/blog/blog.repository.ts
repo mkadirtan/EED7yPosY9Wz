@@ -50,7 +50,7 @@ export class BlogRepository {
     const exists = await this.redis.exists(blogCacheKey(blog.id));
     // Some other process already created cache on a rare occasion
     if (!exists) {
-      await this.redis.setex(blogCacheKey(blog.id), JSON.stringify(blog), blogExpire);
+      await this.redis.setex(blogCacheKey(blog.id), blogExpire, JSON.stringify(blog));
     }
     await lock.release();
   }
@@ -62,6 +62,7 @@ export class BlogRepository {
       console.log(`[CACHE-HIT] [${id}]`);
       const viewCount = await this.incReadCount(id);
       const parsedBlog = JSON.parse(cacheBlog);
+      console.log({ parsedBlog });
       parsedBlog.viewCount = parsedBlog.viewCount + viewCount;
       return parsedBlog;
     }
