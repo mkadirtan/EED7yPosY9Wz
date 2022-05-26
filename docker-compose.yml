@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+  #blog_admin:
+  #  image: dpage/pgadmin4
+  #  environment:
+  #    - PGADMIN_DEFAULT_EMAIL=asd@asd.com
+  #    - PGADMIN_DEFAULT_PASSWORD=1234
+  #  ports:
+  #    - "5050:80"
+
+  blog_db:
+    image: postgres:13
+    hostname: postgres
+    env_file: .env
+
+  blog_redis:
+    image: redis:7.0
+    hostname: redis
+
+  blog_rest:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    command: [ "sh", "/app/init.sh" ]
+    volumes:
+      - "./src:/app/src:ro"
+      - "./.env:/app/.env:ro"
+      - "./init.sh:/app/init.sh"
+    depends_on:
+      - blog_db
+    ports:
+      - "3010:3000"
